@@ -78,15 +78,17 @@ struct Config {
 fn parse_args() -> Config {
     let args: Vec<String> = std::env::args().collect();
     // Check for VESTIGE_DATA_DIR environment variable first
-    let mut data_dir: Option<PathBuf> = std::env::var("VESTIGE_DATA_DIR")
-        .ok()
-        .and_then(|s| {
-            let trimmed = s.trim();
-            if trimmed.is_empty() {
-                None
-            } else {
-                Some(expand_tilde(trimmed))
+    let mut data_dir: Option<PathBuf> = std::env::var_os("VESTIGE_DATA_DIR")
+        .and_then(|value| match value.to_str() {
+            Some(s) => {
+                let trimmed = s.trim();
+                if trimmed.is_empty() {
+                    None
+                } else {
+                    Some(expand_tilde(trimmed))
+                }
             }
+            None => Some(PathBuf::from(value)),
         });
     let mut http_port: u16 = std::env::var("VESTIGE_HTTP_PORT")
         .ok()
