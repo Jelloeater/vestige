@@ -58,7 +58,8 @@ fn expand_tilde(path: &str) -> PathBuf {
             return if path == "~" {
                 home
             } else {
-                home.join(&path[2..])
+                let remainder = path[2..].trim_start_matches(|c| c == '/' || c == '\\');
+                home.join(remainder)
             };
         }
     }
