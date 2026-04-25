@@ -44,6 +44,27 @@ use vestige_core::Storage;
 use protocol::stdio::StdioTransport;
 use server::McpServer;
 
+/// Expand a leading `~` in `path` to the current user's home directory.
+///
+/// Uses the `HOME` environment variable on Unix and `USERPROFILE` on Windows.
+/// Returns the path unchanged when it does not start with `~` or when the
+/// home directory cannot be determined.
+fn expand_tilde(path: &str) -> PathBuf {
+    if path == "~" || path.starts_with("~/") || path.starts_with("~\\") {
+        let home = std::env::var_os("HOME")
+            .or_else(|| std::env::var_os("USERPROFILE"))
+            .map(PathBuf::from);
+        if let Some(home) = home {
+            return if path == "~" {
+                home
+            } else {
+                home.join(&path[2..])
+            };
+        }
+    }
+    PathBuf::from(path)
+}
+
 /// Parsed CLI configuration.
 struct Config {
     data_dir: Option<PathBuf>,
@@ -63,7 +84,7 @@ fn parse_args() -> Config {
             if trimmed.is_empty() {
                 None
             } else {
-                Some(PathBuf::from(trimmed))
+                Some(expand_tilde(trimmed))
             }
         });
     let mut http_port: u16 = std::env::var("VESTIGE_HTTP_PORT")
@@ -128,7 +149,7 @@ fn parse_args() -> Config {
                     std::process::exit(1);
                 }
                 // CLI flag overrides environment variable
-                data_dir = Some(PathBuf::from(&args[i]));
+                data_dir = Some(expand_tilde(&args[i]));
             }
             arg if arg.starts_with("--data-dir=") => {
                 // Safe: we just verified the prefix exists with starts_with
@@ -139,7 +160,7 @@ fn parse_args() -> Config {
                     std::process::exit(1);
                 }
                 // CLI flag overrides environment variable
-                data_dir = Some(PathBuf::from(path));
+                data_dir = Some(expand_tilde(path));
             }
             "--http-port" => {
                 i += 1;
@@ -201,8 +222,26 @@ async fn main() {
         env!("CARGO_PKG_VERSION")
     );
 
+    // Treat `data_dir` as a directory: create it and derive the DB file path.
+    let data_db = config.data_dir.map(|dir| {
+        if let Err(e) = std::fs::create_dir_all(&dir) {
+            error!(
+                "Failed to create data directory '{}': {}",
+                dir.display(),
+                e
+            );
+            std::process::exit(1);
+        }
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let _ = std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o700));
+        }
+        dir.join("vestige.db")
+    });
+
     // Initialize storage with optional custom data directory
-    let storage = match Storage::new(config.data_dir) {
+    let storage = match Storage::new(data_db) {
         Ok(s) => {
             info!("Storage initialized successfully");
 
