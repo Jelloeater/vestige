@@ -223,7 +223,7 @@ async fn main() {
     );
 
     // Treat `data_dir` as a directory: create it and derive the DB file path.
-    let data_db = config.data_dir.map(|dir| {
+    let data_db = if let Some(dir) = config.data_dir {
         if let Err(e) = std::fs::create_dir_all(&dir) {
             error!(
                 "Failed to create data directory '{}': {}",
@@ -235,10 +235,18 @@ async fn main() {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            let _ = std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o700));
+            if let Err(e) = std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o700)) {
+                warn!(
+                    "Failed to set permissions on data directory '{}': {}",
+                    dir.display(),
+                    e
+                );
+            }
         }
-        dir.join("vestige.db")
-    });
+        Some(dir.join("vestige.db"))
+    } else {
+        None
+    };
 
     // Initialize storage with optional custom data directory
     let storage = match Storage::new(data_db) {
