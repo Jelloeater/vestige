@@ -58,7 +58,14 @@ fn parse_args() -> Config {
     // Check for VESTIGE_DATA_DIR environment variable first
     let mut data_dir: Option<PathBuf> = std::env::var("VESTIGE_DATA_DIR")
         .ok()
-        .map(PathBuf::from);
+        .and_then(|s| {
+            let trimmed = s.trim();
+            if trimmed.is_empty() {
+                None
+            } else {
+                Some(PathBuf::from(trimmed))
+            }
+        });
     let mut http_port: u16 = std::env::var("VESTIGE_HTTP_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -106,7 +113,7 @@ fn parse_args() -> Config {
                 println!("    vestige-mcp --data-dir /custom/path");
                 println!("    vestige-mcp --http-port 8080");
                 println!("    RUST_LOG=debug vestige-mcp");
-                println!("    VESTIGE_DATA_DIR=~/.my-vestige vestige-mcp");
+                println!("    VESTIGE_DATA_DIR=$HOME/.my-vestige vestige-mcp");
                 std::process::exit(0);
             }
             "--version" | "-V" => {

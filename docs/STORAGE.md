@@ -67,7 +67,7 @@ Add to your project's `.claude/settings.local.json`:
 }
 ```
 
-Both methods create `.vestige/vestige.db` in your project root. Add `.vestige/` to `.gitignore`.
+In the examples above, both methods create `./.vestige/vestige.db` relative to your project root. Add `.vestige/` to `.gitignore`.
 
 **Note:** The `--data-dir` flag takes precedence over the `VESTIGE_DATA_DIR` environment variable.
 
