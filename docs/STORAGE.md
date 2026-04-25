@@ -37,7 +37,23 @@ Separate memory per codebase. Good for:
 - Different coding styles per project
 - Team environments
 
-**Claude Code Setup:**
+**Method 1: Environment Variable**
+
+Set `VESTIGE_DATA_DIR` in your project's `.claude/settings.local.json`:
+```json
+{
+  "mcpServers": {
+    "vestige": {
+      "command": "vestige-mcp",
+      "env": {
+        "VESTIGE_DATA_DIR": "./.vestige"
+      }
+    }
+  }
+}
+```
+
+**Method 2: Command-line Argument**
 
 Add to your project's `.claude/settings.local.json`:
 ```json
@@ -51,7 +67,9 @@ Add to your project's `.claude/settings.local.json`:
 }
 ```
 
-This creates `.vestige/vestige.db` in your project root. Add `.vestige/` to `.gitignore`.
+In the examples above, both methods create `./.vestige/vestige.db` relative to your project root. Add `.vestige/` to `.gitignore`.
+
+**Note:** The `--data-dir` flag takes precedence over the `VESTIGE_DATA_DIR` environment variable.
 
 **Multiple Named Instances:**
 
@@ -64,7 +82,9 @@ For power users who want both global AND project memory:
     },
     "vestige-project": {
       "command": "vestige-mcp",
-      "args": ["--data-dir", "./.vestige"]
+      "env": {
+        "VESTIGE_DATA_DIR": "./.vestige"
+      }
     }
   }
 }
@@ -74,13 +94,17 @@ For power users who want both global AND project memory:
 
 For setups with multiple Claude instances (e.g., Claude Desktop + Claude Code, or two personas):
 
+> **Note:** `VESTIGE_DATA_DIR` and `--data-dir` both support `~/…` paths. The server expands a leading `~` to the current user's home directory, so these values work correctly in JSON configs where the shell does not perform expansion.
+
 **Shared Memory (Both Claudes share memories):**
 ```json
 {
   "mcpServers": {
     "vestige": {
       "command": "vestige-mcp",
-      "args": ["--data-dir", "~/shared-vestige"]
+      "env": {
+        "VESTIGE_DATA_DIR": "~/shared-vestige"
+      }
     }
   }
 }
@@ -94,7 +118,9 @@ Claude Desktop config - for "Domovoi":
   "mcpServers": {
     "vestige": {
       "command": "vestige-mcp",
-      "args": ["--data-dir", "~/vestige-domovoi"]
+      "env": {
+        "VESTIGE_DATA_DIR": "~/vestige-domovoi"
+      }
     }
   }
 }
@@ -106,7 +132,9 @@ Claude Code config - for "Storm":
   "mcpServers": {
     "vestige": {
       "command": "vestige-mcp",
-      "args": ["--data-dir", "~/vestige-storm"]
+      "env": {
+        "VESTIGE_DATA_DIR": "~/vestige-storm"
+      }
     }
   }
 }
