@@ -55,7 +55,10 @@ struct Config {
 /// Exits the process if `--help` or `--version` is requested.
 fn parse_args() -> Config {
     let args: Vec<String> = std::env::args().collect();
-    let mut data_dir: Option<PathBuf> = None;
+    // Check for VESTIGE_DATA_DIR environment variable first
+    let mut data_dir: Option<PathBuf> = std::env::var("VESTIGE_DATA_DIR")
+        .ok()
+        .map(PathBuf::from);
     let mut http_port: u16 = std::env::var("VESTIGE_HTTP_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -83,16 +86,19 @@ fn parse_args() -> Config {
                 println!();
                 println!("ENVIRONMENT:");
                 println!(
-                    "    RUST_LOG                  Log level filter (e.g., debug, info, warn, error)"
+                    "    RUST_LOG                       Log level filter (e.g., debug, info, warn, error)"
                 );
                 println!(
-                    "    VESTIGE_AUTH_TOKEN         Override the bearer token for HTTP transport"
+                    "    VESTIGE_DATA_DIR               Custom data directory (overridden by --data-dir)"
                 );
-                println!("    VESTIGE_HTTP_PORT          HTTP transport port (default: 3928)");
-                println!("    VESTIGE_DASHBOARD_ENABLED     Enable dashboard (default: disabled)");
-                println!("    VESTIGE_DASHBOARD_PORT     Dashboard port (default: 3927)");
                 println!(
-                    "    VESTIGE_SYSTEM_PROMPT_MODE Inject the full composition mandate into every MCP session (minimal|full, default: minimal)"
+                    "    VESTIGE_AUTH_TOKEN             Override the bearer token for HTTP transport"
+                );
+                println!("    VESTIGE_HTTP_PORT              HTTP transport port (default: 3928)");
+                println!("    VESTIGE_DASHBOARD_ENABLED      Enable dashboard (default: disabled)");
+                println!("    VESTIGE_DASHBOARD_PORT         Dashboard port (default: 3927)");
+                println!(
+                    "    VESTIGE_SYSTEM_PROMPT_MODE     Inject the full composition mandate into every MCP session (minimal|full, default: minimal)"
                 );
                 println!();
                 println!("EXAMPLES:");
@@ -100,6 +106,7 @@ fn parse_args() -> Config {
                 println!("    vestige-mcp --data-dir /custom/path");
                 println!("    vestige-mcp --http-port 8080");
                 println!("    RUST_LOG=debug vestige-mcp");
+                println!("    VESTIGE_DATA_DIR=~/.my-vestige vestige-mcp");
                 std::process::exit(0);
             }
             "--version" | "-V" => {
@@ -113,6 +120,7 @@ fn parse_args() -> Config {
                     eprintln!("Usage: vestige-mcp --data-dir <PATH>");
                     std::process::exit(1);
                 }
+                // CLI flag overrides environment variable
                 data_dir = Some(PathBuf::from(&args[i]));
             }
             arg if arg.starts_with("--data-dir=") => {
@@ -123,6 +131,7 @@ fn parse_args() -> Config {
                     eprintln!("Usage: vestige-mcp --data-dir <PATH>");
                     std::process::exit(1);
                 }
+                // CLI flag overrides environment variable
                 data_dir = Some(PathBuf::from(path));
             }
             "--http-port" => {

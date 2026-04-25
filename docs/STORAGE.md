@@ -37,7 +37,23 @@ Separate memory per codebase. Good for:
 - Different coding styles per project
 - Team environments
 
-**Claude Code Setup:**
+**Method 1: Environment Variable**
+
+Set `VESTIGE_DATA_DIR` in your project's `.claude/settings.local.json`:
+```json
+{
+  "mcpServers": {
+    "vestige": {
+      "command": "vestige-mcp",
+      "env": {
+        "VESTIGE_DATA_DIR": "./.vestige"
+      }
+    }
+  }
+}
+```
+
+**Method 2: Command-line Argument**
 
 Add to your project's `.claude/settings.local.json`:
 ```json
@@ -51,7 +67,9 @@ Add to your project's `.claude/settings.local.json`:
 }
 ```
 
-This creates `.vestige/vestige.db` in your project root. Add `.vestige/` to `.gitignore`.
+Both methods create `.vestige/vestige.db` in your project root. Add `.vestige/` to `.gitignore`.
+
+**Note:** The `--data-dir` flag takes precedence over the `VESTIGE_DATA_DIR` environment variable.
 
 **Multiple Named Instances:**
 
@@ -64,7 +82,9 @@ For power users who want both global AND project memory:
     },
     "vestige-project": {
       "command": "vestige-mcp",
-      "args": ["--data-dir", "./.vestige"]
+      "env": {
+        "VESTIGE_DATA_DIR": "./.vestige"
+      }
     }
   }
 }
@@ -80,7 +100,9 @@ For setups with multiple Claude instances (e.g., Claude Desktop + Claude Code, o
   "mcpServers": {
     "vestige": {
       "command": "vestige-mcp",
-      "args": ["--data-dir", "~/shared-vestige"]
+      "env": {
+        "VESTIGE_DATA_DIR": "~/shared-vestige"
+      }
     }
   }
 }
@@ -94,7 +116,9 @@ Claude Desktop config - for "Domovoi":
   "mcpServers": {
     "vestige": {
       "command": "vestige-mcp",
-      "args": ["--data-dir", "~/vestige-domovoi"]
+      "env": {
+        "VESTIGE_DATA_DIR": "~/vestige-domovoi"
+      }
     }
   }
 }
@@ -106,7 +130,9 @@ Claude Code config - for "Storm":
   "mcpServers": {
     "vestige": {
       "command": "vestige-mcp",
-      "args": ["--data-dir", "~/vestige-storm"]
+      "env": {
+        "VESTIGE_DATA_DIR": "~/vestige-storm"
+      }
     }
   }
 }
