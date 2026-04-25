@@ -94,6 +94,8 @@ For power users who want both global AND project memory:
 
 For setups with multiple Claude instances (e.g., Claude Desktop + Claude Code, or two personas):
 
+> **Note:** `VESTIGE_DATA_DIR` and `--data-dir` both support `~/…` paths. The server expands a leading `~` to the current user's home directory, so these values work correctly in JSON configs where the shell does not perform expansion.
+
 **Shared Memory (Both Claudes share memories):**
 ```json
 {
